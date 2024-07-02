@@ -1,9 +1,9 @@
 package br.com.alura.screenmatch.model;
-import jakarta.persistence.*;
 
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.OptionalDouble;
+import java.util.Optional;
 
 @Entity
 @Table(name = "series")
@@ -19,19 +19,18 @@ public class Serie {
     private String atores;
     private String poster;
     private String sinopse;
-
-    @Transient
+    @OneToMany(mappedBy = "serie")
     private List<Episodio> episodios = new ArrayList<>();
 
     // Construtor padrão necessário para o Hibernate
-    public Serie() {
-    }
+    public Serie() {}
 
-
-    public Serie(DadosSerie dadosSerie){
+    public Serie(DadosSerie dadosSerie) {
         this.titulo = dadosSerie.titulo();
         this.totalTemporadas = dadosSerie.totalTemporadas();
-        this.avaliacao = OptionalDouble.of(Double.valueOf(dadosSerie.avaliacao())).orElse(0);
+        this.avaliacao = Optional.ofNullable(dadosSerie.avaliacao())
+                .map(Double::valueOf)
+                .orElse(0.0);
         this.genero = Categoria.fromString(dadosSerie.genero().split(",")[0].trim());
         this.atores = dadosSerie.atores();
         this.poster = dadosSerie.Art();
@@ -112,14 +111,15 @@ public class Serie {
 
     @Override
     public String toString() {
-        return
-                "genero=" + genero +
-                        ", titulo='" + titulo + '\'' +
-                        ", totalTemporadas=" + totalTemporadas +
-                        ", avaliacao=" + avaliacao +
-
-                        ", atores='" + atores + '\'' +
-                        ", poster='" + poster + '\'' +
-                        ", sinopse='" + sinopse + '\'';
+        return "Serie{" +
+                "id=" + id +
+                ", titulo='" + titulo + '\'' +
+                ", totalTemporadas=" + totalTemporadas +
+                ", avaliacao=" + avaliacao +
+                ", genero=" + genero +
+                ", atores='" + atores + '\'' +
+                ", poster='" + poster + '\'' +
+                ", sinopse='" + sinopse + '\'' +
+                '}';
     }
 }
