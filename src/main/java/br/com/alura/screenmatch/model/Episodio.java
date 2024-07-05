@@ -17,7 +17,10 @@ public class Episodio {
     @ManyToOne
     private Serie serie;
 
-    //código omitido
+    //
+    public Episodio(){}
+
+
 
 public Episodio(Integer numeroTemporada, DadosEpisodio dadosEpisodio) {
         this.temporada = numeroTemporada;
