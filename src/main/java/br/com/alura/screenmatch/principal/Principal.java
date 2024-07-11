@@ -1,9 +1,6 @@
 package br.com.alura.screenmatch.principal;
 
-import br.com.alura.screenmatch.model.DadosSerie;
-import br.com.alura.screenmatch.model.DadosTemporada;
-import br.com.alura.screenmatch.model.Episodio;
-import br.com.alura.screenmatch.model.Serie;
+import br.com.alura.screenmatch.model.*;
 import br.com.alura.screenmatch.repository.SerieRepository;
 import br.com.alura.screenmatch.service.ConsumoApi;
 import br.com.alura.screenmatch.service.ConverteDados;
@@ -22,6 +19,8 @@ public class Principal {
 
     private SerieRepository repositorio;
     private List<Serie> series = new ArrayList<>();
+    private Optional<Serie> serieBusca;
+
 
 
     public Principal(SerieRepository repositorio) {
@@ -32,12 +31,15 @@ public class Principal {
         var opcao = -1;
         while(opcao != 0) {
             var menu = """
-                    1 - Buscar séries
-                    2 - Buscar episódios
-                    3 - Listar séries buscadas
-                    4 - Buscar série por título
-                    5 - Buscar séries por ator
-                                    
+                                1 - Buscar séries
+                                2 - Buscar episódios
+                                3 - Listar séries buscadas
+                                4 - Buscar série por título
+                                5 - Buscar séries por ator
+                                6 - Top 5 Séries
+                                7 - Buscar séries por categoria
+                                8 - Filtrar séries
+                                9 - Buscar episódios por trecho
                     0 - Sair                                 
                     """;
 
@@ -61,9 +63,23 @@ public class Principal {
                 case 5:
                     buscarSeriesPorAtor();
                     break;
+                case 7:
+                    buscarSeriesPorCategoria();
+                    break;
+                case 8:
+                    filtrarSeriesPorTemporadaEAvaliacao();
+                    break;
+                case 9:
+                buscarEpisodioPorTrecho();
+                    break;
+                case 10:
+                    buscarEpisodiosDepoisDeUmaData();
+                    break;
+
                 case 0:
                     System.out.println("Saindo...");
                     break;
+
                 default:
                     System.out.println("Opção inválida");
             }
@@ -134,15 +150,15 @@ public class Principal {
     }
 
     private void buscarSeriePorTitulo() {
-        System.out.println("Escolha uma série pelo nome");
+        System.out.println("Escolha um série pelo nome: ");
         var nomeSerie = leitura.nextLine();
+        serieBusca = repositorio.findByTituloContainingIgnoreCase(nomeSerie);
 
-        Optional<Serie> serieBuscada = repositorio.findByTituloContainingIgnoreCase(nomeSerie);
+        if (serieBusca.isPresent()) {
+            System.out.println("Dados da série: " + serieBusca.get());
 
-        if (serieBuscada.isPresent()){
-            System.out.println("Dados da serie" + serieBuscada.get());
         } else {
-            System.out.println("Serie não encontrada");
+            System.out.println("Série não encontrada!");
         }
     }
 
@@ -156,5 +172,67 @@ public class Principal {
         seriesEncontradas.forEach(s ->
                 System.out.println(s.getTitulo() + " avaliação: " + s.getAvaliacao()));
     }
+
+    private void buscarSeriesPorCategoria() {
+        System.out.println("Deseja buscar séries de que categoria/gênero? ");
+        var nomeGenero = leitura.nextLine();
+        Categoria categoria = Categoria.fromPortugues(nomeGenero);
+        List<Serie> seriesPorCategoria = repositorio.findByGenero(categoria);
+        System.out.println("Séries da categoria " + nomeGenero);
+        seriesPorCategoria.forEach(System.out::println);
+    }
+
+    private void filtrarSeriesPorTemporadaEAvaliacao(){
+        System.out.println("Filtrar séries até quantas temporadas? ");
+        var totalTemporadas = leitura.nextInt();
+        leitura.nextLine();
+        System.out.println("Com avaliação a partir de que valor? ");
+        var avaliacao = leitura.nextDouble();
+        leitura.nextLine();
+        List<Serie> filtroSeries = repositorio.seriesPorTemporadaEAValiacao(totalTemporadas, avaliacao);
+        System.out.println("*** Séries filtradas ***");
+        filtroSeries.forEach(s ->
+                System.out.println(s.getTitulo() + "  - avaliação: " + s.getAvaliacao()));
+    }
+
+//Código omitido
+
+    private void buscarEpisodioPorTrecho(){
+        System.out.println("Qual o nome do episódio para busca?");
+        var trechoEpisodio = leitura.nextLine();
+        List<Episodio> episodiosEncontrados = repositorio.episodiosPorTrecho(trechoEpisodio);
+        episodiosEncontrados.forEach(e ->
+                System.out.printf("Série: %s Temporada %s - Episódio %s - %s\n",
+                        e.getSerie().getTitulo(), e.getTemporada(),
+                        e.getNumeroEpisodio(), e.getTitulo()));}
+
+
+//Código omitido
+
+    private void topEpisodiosPorSerie(){
+        buscarSeriePorTitulo();
+        if(serieBusca.isPresent()){
+            Serie serie = serieBusca.get();
+            List<Episodio> topEpisodios = repositorio.topEpisodiosPorSerie(serie);
+            topEpisodios.forEach(e ->
+                    System.out.printf("Série: %s Temporada %s - Episódio %s - %s Avaliação %s\n",
+                            e.getSerie().getTitulo(), e.getTemporada(),
+                            e.getNumeroEpisodio(), e.getTitulo()));}
+
+
+}
+
+        private void buscarEpisodiosDepoisDeUmaData(){
+            buscarSeriePorTitulo();
+            if(serieBusca.isPresent()){
+                Serie serie = serieBusca.get();
+                System.out.println("Digite o ano limite de lançamento");
+                var anoLancamento = leitura.nextInt();
+                leitura.nextLine();
+
+                List<Episodio> episodiosAno = repositorio.episodiosPorSerieEAno(serie, anoLancamento);
+
+            }
+        }
 
 }
